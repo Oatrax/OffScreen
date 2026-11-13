@@ -24,6 +24,20 @@ export async function addTask(
   );
 }
 
+export async function updateTask(
+  db: SQLiteDatabase,
+  id: number,
+  t: { title: string; recurrence: number; required: boolean },
+) {
+  await db.runAsync(
+    'UPDATE tasks SET title = ?, recurrence = ?, required = ? WHERE id = ?',
+    t.title,
+    t.recurrence,
+    t.required ? 1 : 0,
+    id,
+  );
+}
+
 export async function archiveTask(db: SQLiteDatabase, id: number) {
   await db.runAsync('UPDATE tasks SET archived = 1 WHERE id = ?', id);
 }
