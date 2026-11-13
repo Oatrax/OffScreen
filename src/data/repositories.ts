@@ -46,6 +46,21 @@ export async function updateTask(db: SQLiteDatabase, id: number, t: TaskInput) {
       id,
     );
     await writeSteps(tx, id, t.kind === 'steps' ? t.steps : []);
+
+    // A steps task with an unchecked step (e.g. one just added) can't stay completed today.
+    if (t.kind === 'steps') {
+      const today = dayKey();
+      const open = await tx.getFirstAsync<{ n: number }>(
+        `SELECT COUNT(*) AS n FROM task_steps s
+         WHERE s.task_id = ? AND NOT EXISTS
+           (SELECT 1 FROM step_completions c WHERE c.step_id = s.id AND c.day = ?)`,
+        id,
+        today,
+      );
+      if ((open?.n ?? 0) > 0) {
+        await tx.runAsync('DELETE FROM task_completions WHERE task_id = ? AND day = ?', id, today);
+      }
+    }
   });
 }
 
