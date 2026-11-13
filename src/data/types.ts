@@ -1,3 +1,5 @@
+export type TaskKind = 'simple' | 'timed' | 'steps';
+
 export type Task = {
   id: number;
   title: string;
@@ -7,6 +9,15 @@ export type Task = {
   required: number;
   archived: number;
   created_at: number;
+  kind: TaskKind;
+  duration_min: number | null;
+};
+
+export type TaskStep = {
+  id: number;
+  task_id: number;
+  title: string;
+  position: number;
 };
 
 export type LockedApp = {

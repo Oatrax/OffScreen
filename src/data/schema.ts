@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DATABASE_NAME = 'offscreen.db';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 /** Runs before any screen renders. Add new `if (version === N)` blocks for future migrations. */
 export async function migrateDb(db: SQLiteDatabase) {
@@ -47,6 +47,36 @@ export async function migrateDb(db: SQLiteDatabase) {
       );
     `);
     version = 1;
+  }
+
+  if (version === 1) {
+    await db.execAsync(`
+      -- kind: 'simple' | 'timed' | 'steps'. duration_min is only used by 'timed'.
+      ALTER TABLE tasks ADD COLUMN kind TEXT NOT NULL DEFAULT 'simple';
+      ALTER TABLE tasks ADD COLUMN duration_min INTEGER;
+
+      CREATE TABLE task_steps (
+        id INTEGER PRIMARY KEY NOT NULL,
+        task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        position INTEGER NOT NULL
+      );
+
+      CREATE TABLE step_completions (
+        step_id INTEGER NOT NULL REFERENCES task_steps(id) ON DELETE CASCADE,
+        day TEXT NOT NULL,
+        PRIMARY KEY (step_id, day)
+      );
+
+      -- When the user pressed "Start" on a timed task, per day (epoch ms).
+      CREATE TABLE task_timers (
+        task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+        day TEXT NOT NULL,
+        started_at INTEGER NOT NULL,
+        PRIMARY KEY (task_id, day)
+      );
+    `);
+    version = 2;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

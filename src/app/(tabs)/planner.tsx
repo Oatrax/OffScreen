@@ -7,16 +7,17 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { describeRecurrence } from '@/data/dates';
-import { addTask, archiveTask, updateTask } from '@/data/repositories';
+import { addTask, archiveTask, updateTask, type TaskInput } from '@/data/repositories';
 import type { Task } from '@/data/types';
-import { TaskEditor, type TaskDraft } from '@/features/tasks/task-editor';
+import { TaskEditor } from '@/features/tasks/task-editor';
+import { describeKind } from '@/features/tasks/rules';
 import { useTaskState } from '@/features/tasks/use-tasks';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function PlannerScreen() {
   const db = useSQLiteContext();
   const theme = useTheme();
-  const { tasks, loaded, reload } = useTaskState();
+  const { tasks, steps, loaded, reload } = useTaskState();
   const [editing, setEditing] = useState<Task | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -29,7 +30,7 @@ export default function PlannerScreen() {
     setOpen(true);
   };
 
-  const save = async (draft: TaskDraft) => {
+  const save = async (draft: TaskInput) => {
     if (editing) await updateTask(db, editing.id, draft);
     else await addTask(db, draft);
     setOpen(false);
@@ -62,8 +63,13 @@ export default function PlannerScreen() {
             <View style={styles.flex}>
               <ThemedText type="smallBold">{item.title}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {describeRecurrence(item.recurrence)}
-                {item.required ? '' : ' · optional'}
+                {[
+                  describeKind(item, steps.filter((s) => s.task_id === item.id).length),
+                  describeRecurrence(item.recurrence),
+                  item.required ? null : 'optional',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </ThemedText>
             </View>
             <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
@@ -78,6 +84,7 @@ export default function PlannerScreen() {
       <TaskEditor
         visible={open}
         task={editing}
+        steps={steps.filter((s) => s.task_id === editing?.id)}
         onSave={save}
         onDelete={remove}
         onClose={() => setOpen(false)}

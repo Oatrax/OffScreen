@@ -3,33 +3,60 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 
 import { runsOn } from '@/data/dates';
-import { completedTaskIds, listLockedApps, listTasks } from '@/data/repositories';
-import type { Task } from '@/data/types';
+import {
+  completedStepIds,
+  completedTaskIds,
+  getTimers,
+  listLockedApps,
+  listSteps,
+  listTasks,
+} from '@/data/repositories';
+import type { Task, TaskStep } from '@/data/types';
 
 export type TaskState = {
   tasks: Task[];
+  steps: TaskStep[];
   doneIds: Set<number>;
+  doneStepIds: Set<number>;
+  /** taskId -> timer start (epoch ms), today only. */
+  timers: Record<number, number>;
   lockedAppCount: number;
   loaded: boolean;
 };
 
-/** Loads tasks, today's completions and lock count; reloads whenever the screen gains focus. */
+const EMPTY: TaskState = {
+  tasks: [],
+  steps: [],
+  doneIds: new Set(),
+  doneStepIds: new Set(),
+  timers: {},
+  lockedAppCount: 0,
+  loaded: false,
+};
+
+/** Loads everything the Planner/Today screens need; reloads whenever the screen gains focus. */
 export function useTaskState() {
   const db = useSQLiteContext();
-  const [state, setState] = useState<TaskState>({
-    tasks: [],
-    doneIds: new Set(),
-    lockedAppCount: 0,
-    loaded: false,
-  });
+  const [state, setState] = useState<TaskState>(EMPTY);
 
   const reload = useCallback(async () => {
-    const [tasks, done, locked] = await Promise.all([
+    const [tasks, steps, done, doneSteps, timers, locked] = await Promise.all([
       listTasks(db),
+      listSteps(db),
       completedTaskIds(db),
+      completedStepIds(db),
+      getTimers(db),
       listLockedApps(db),
     ]);
-    setState({ tasks, doneIds: new Set(done), lockedAppCount: locked.length, loaded: true });
+    setState({
+      tasks,
+      steps,
+      doneIds: new Set(done),
+      doneStepIds: new Set(doneSteps),
+      timers,
+      lockedAppCount: locked.length,
+      loaded: true,
+    });
   }, [db]);
 
   useFocusEffect(
