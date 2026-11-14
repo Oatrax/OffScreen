@@ -5,7 +5,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { CardShadow, Spacing } from '@/constants/theme';
 import { describeRecurrence } from '@/data/dates';
 import { addTask, archiveTask, updateTask, type TaskInput } from '@/data/repositories';
 import type { Task } from '@/data/types';
@@ -101,8 +101,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.three,
-    borderRadius: 12,
+    borderRadius: 16,
     gap: Spacing.two,
+    ...CardShadow,
   },
   flex: { flex: 1 },
   fab: {
@@ -114,6 +115,9 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
+    ...CardShadow,
+    shadowColor: '#6C5CE7',
+    shadowOpacity: 0.45,
+    elevation: 8,
   },
 });

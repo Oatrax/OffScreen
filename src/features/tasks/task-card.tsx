@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { CardShadow, Spacing } from '@/constants/theme';
 import type { Task, TaskStep } from '@/data/types';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -39,7 +39,11 @@ export function TaskCard({
   const headerPressable = task.kind === 'simple' || done;
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: theme.backgroundElement, borderLeftColor: done ? theme.success : theme.accent },
+      ]}>
       <Pressable
         onPress={onToggleDone}
         disabled={!headerPressable}
@@ -147,7 +151,13 @@ function ActionButton({
 }
 
 const styles = StyleSheet.create({
-  card: { padding: Spacing.three, borderRadius: 12, gap: Spacing.three },
+  card: {
+    padding: Spacing.three,
+    borderRadius: 16,
+    gap: Spacing.three,
+    borderLeftWidth: 5,
+    ...CardShadow,
+  },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   flex: { flex: 1 },
   doneText: { textDecorationLine: 'line-through' },
@@ -155,5 +165,5 @@ const styles = StyleSheet.create({
   step: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.one },
   action: { alignItems: 'center', gap: Spacing.two },
   countdown: { fontVariant: ['tabular-nums'] },
-  button: { alignSelf: 'stretch', alignItems: 'center', paddingVertical: 12, borderRadius: 10 },
+  button: { alignSelf: 'stretch', alignItems: 'center', paddingVertical: 12, borderRadius: 12 },
 });

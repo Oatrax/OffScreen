@@ -2,7 +2,6 @@ import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 
-import { runsOn } from '@/data/dates';
 import {
   completedStepIds,
   completedTaskIds,
@@ -12,6 +11,9 @@ import {
   listTasks,
 } from '@/data/repositories';
 import type { Task, TaskStep } from '@/data/types';
+import { syncBlocker } from '@/features/unlock';
+
+export { tasksForToday, unlockProgress } from './rules';
 
 export type TaskState = {
   tasks: Task[];
@@ -57,6 +59,7 @@ export function useTaskState() {
       lockedAppCount: locked.length,
       loaded: true,
     });
+    void syncBlocker(db).catch(() => {});
   }, [db]);
 
   useFocusEffect(
@@ -66,16 +69,4 @@ export function useTaskState() {
   );
 
   return { ...state, reload };
-}
-
-export function tasksForToday(tasks: Task[]): Task[] {
-  const now = new Date();
-  return tasks.filter((t) => runsOn(t.recurrence, now));
-}
-
-/** Unlock rule: every required task scheduled for today is done. */
-export function unlockProgress(todayTasks: Task[], doneIds: Set<number>) {
-  const required = todayTasks.filter((t) => t.required === 1);
-  const done = required.filter((t) => doneIds.has(t.id)).length;
-  return { done, total: required.length, unlocked: done === required.length };
 }

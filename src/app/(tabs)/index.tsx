@@ -1,21 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { CardShadow, Gradients, Spacing } from '@/constants/theme';
 import { resetTimer, setStepDone, setTaskDone, startTimer } from '@/data/repositories';
 import type { Task, TaskStep } from '@/data/types';
+import { PermissionBanner } from '@/features/permissions/permission-banner';
+import { PinCard } from '@/features/unlock/pin-card';
 import { currentTime, readiness } from '@/features/tasks/rules';
 import { TaskCard } from '@/features/tasks/task-card';
 import { tasksForToday, unlockProgress, useTaskState } from '@/features/tasks/use-tasks';
-import { useTheme } from '@/hooks/use-theme';
 
 export default function TodayScreen() {
   const db = useSQLiteContext();
-  const theme = useTheme();
   const { tasks, steps, doneIds, doneStepIds, timers, lockedAppCount, loaded, reload } =
     useTaskState();
   const [now, setNow] = useState(currentTime);
@@ -80,29 +81,31 @@ export default function TodayScreen() {
         keyExtractor={(t) => String(t.id)}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          <View style={[styles.summary, { backgroundColor: theme.backgroundElement }]}>
+          <>
+          <PermissionBanner />
+          <PinCard unlocked={unlocked} lockedAppCount={lockedAppCount} />
+          <LinearGradient
+            colors={unlocked ? Gradients.unlocked : Gradients.locked}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.summary}>
             <View style={styles.statusRow}>
-              <Ionicons
-                name={unlocked ? 'lock-open-outline' : 'lock-closed-outline'}
-                size={22}
-                color={unlocked ? theme.success : theme.danger}
-              />
-              <ThemedText type="smallBold" style={{ color: unlocked ? theme.success : theme.danger }}>
-                {unlocked ? 'Apps unlockable' : 'Apps locked'}
+              <Ionicons name={unlocked ? 'lock-open' : 'lock-closed'} size={22} color="#fff" />
+              <ThemedText type="smallBold" style={styles.heroText}>
+                {unlocked ? 'Apps unlockable — great work!' : 'Apps locked — finish your tasks'}
               </ThemedText>
             </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              {status} · {lockedAppCount} app{lockedAppCount === 1 ? '' : 's'} selected
+            <ThemedText type="title" style={styles.heroText}>
+              {Math.round(pct * 100)}%
             </ThemedText>
-            <View style={[styles.bar, { backgroundColor: theme.backgroundSelected }]}>
-              <View
-                style={[styles.fill, { width: `${pct * 100}%`, backgroundColor: theme.success }]}
-              />
+            <View style={styles.bar}>
+              <View style={[styles.fill, { width: `${pct * 100}%` }]} />
             </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              {done}/{total} required done
+            <ThemedText type="small" style={styles.heroSub}>
+              {done}/{total} required done · {status} · {lockedAppCount} app{lockedAppCount === 1 ? '' : 's'} selected
             </ThemedText>
-          </View>
+          </LinearGradient>
+          </>
         }
         ListEmptyComponent={
           loaded ? (
@@ -133,9 +136,11 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   list: { padding: Spacing.three, gap: Spacing.two },
-  summary: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two, marginBottom: Spacing.two },
+  summary: { padding: Spacing.four, borderRadius: 24, gap: Spacing.two, marginBottom: Spacing.two, ...CardShadow },
+  heroText: { color: '#fff' },
+  heroSub: { color: 'rgba(255,255,255,0.9)' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  bar: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  fill: { height: 8, borderRadius: 4 },
+  bar: { height: 10, borderRadius: 5, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.3)' },
+  fill: { height: 10, borderRadius: 5, backgroundColor: '#fff' },
   empty: { textAlign: 'center', marginTop: Spacing.five },
 });

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { blocker, type InstalledApp } from '@/blocker';
 import { ThemedText } from '@/components/themed-text';
@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { listLockedApps, setAppLocked } from '@/data/repositories';
 import { AppIcon } from '@/features/apps/app-icon';
+import { getLockSettings, getUnlockState, syncBlocker } from '@/features/unlock';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function AppLockScreen() {
@@ -50,6 +51,14 @@ export default function AppLockScreen() {
   );
 
   const toggle = async (app: InstalledApp, value: boolean) => {
+    // Strict mode: a lock can only be removed once today's tasks are done.
+    if (!value) {
+      const [settings, state] = await Promise.all([getLockSettings(db), getUnlockState(db)]);
+      if (settings.strict && !state.complete) {
+        Alert.alert('Locked until tasks are done', "Finish today's required tasks to remove this lock.");
+        return;
+      }
+    }
     // Optimistic update so the switch feels instant.
     setLocked((prev) => {
       const next = new Set(prev);
@@ -58,6 +67,7 @@ export default function AppLockScreen() {
       return next;
     });
     await setAppLocked(db, app, value);
+    await syncBlocker(db);
   };
 
   const visible = useMemo(() => {
@@ -117,6 +127,8 @@ export default function AppLockScreen() {
                 )}
               </View>
               <Switch
+                trackColor={{ false: theme.backgroundSelected, true: theme.accent }}
+                thumbColor="#fff"
                 value={locked.has(item.packageName)}
                 onValueChange={(v) => toggle(item, v)}
               />

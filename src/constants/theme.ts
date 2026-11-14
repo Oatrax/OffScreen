@@ -7,25 +7,49 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    accent: '#3c87f7',
-    success: '#1f9d55',
-    danger: '#d64545',
+    text: '#1E1B3A',
+    background: '#F4F1FF',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#E6E0FF',
+    textSecondary: '#6B678A',
+    accent: '#6C5CE7',
+    accentSoft: '#E9E5FF',
+    success: '#00B589',
+    danger: '#FF5A7A',
+    warning: '#FFA620',
+    pink: '#FF6FB1',
+    sky: '#2FB5F5',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    accent: '#5b9bff',
-    success: '#3ecf7a',
-    danger: '#ff6b6b',
+    text: '#F3F1FF',
+    background: '#14122B',
+    backgroundElement: '#211E45',
+    backgroundSelected: '#312D63',
+    textSecondary: '#A9A5CF',
+    accent: '#8B7CFF',
+    accentSoft: '#322E68',
+    success: '#2EE6B0',
+    danger: '#FF7A93',
+    warning: '#FFC247',
+    pink: '#FF8CC4',
+    sky: '#5CCBFF',
   },
+} as const;
+
+/** Hero gradients (used on Today / Profile). */
+export const Gradients = {
+  locked: ['#6C5CE7', '#A855F7', '#FF6FB1'],
+  unlocked: ['#00B589', '#2FB5F5', '#6C5CE7'],
+  profile: ['#FF9A3D', '#FF6FB1', '#6C5CE7'],
+} as const;
+
+/** Soft card shadow; looks right on the tinted light background and is subtle in dark. */
+export const CardShadow = {
+  shadowColor: '#4B3FC9',
+  shadowOpacity: 0.12,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 3,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
