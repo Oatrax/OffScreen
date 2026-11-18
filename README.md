@@ -1,56 +1,31 @@
-# Welcome to your Expo app 👋
+# OffScreen
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An Android app that blocks the apps that distract you — until you finish your daily tasks.
 
-## Get started
+Pick the apps you want locked (e.g. Instagram, TikTok). While locked, opening one of them shows a lock screen that can't be dismissed. OffScreen holds a hidden PIN and only reveals it (or unlocks automatically) once every task you planned for the day is done.
 
-1. Install dependencies
+## Features
+- **Planner**: daily and recurring tasks, including timed and multi-step tasks
+- **Today** screen with progress toward unlocking and current lock status
+- **App Lock**: picker for installed apps, with per-app lock toggles
+- **Task-gated unlock** with auto-unlock or PIN-reveal modes, and a strict mode
+- **Stats and profile**: streaks, tasks completed vs. missed, blocked opens, estimated time saved
+- **Local-first**: everything is stored on the device (SQLite); no account, no cloud
+- **Resilient blocking**: restarts after reboot, PIN attempt lockout, stale-PIN rejection
 
-   ```bash
-   npm install
-   ```
+## How blocking works
+A native Kotlin Expo module (`modules/offscreen-blocker`) runs a foreground service that polls `UsageStatsManager` to detect the foreground app. When a locked app opens, it launches a `LockActivity` over it (Draw Over Other Apps). An Accessibility service is deliberately avoided because of Google Play policy risk. The PIN is generated on the device and kept in secure storage.
 
-2. Start the app
+## Tech stack
+React Native 0.88 · Expo (Expo Router) · TypeScript · expo-sqlite · expo-secure-store · Kotlin native module (foreground service, boot receiver, lock activity)
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Run it
+Needs a development build because of the native module (Expo Go won't work), plus an Android device or emulator:
 ```bash
-npm run reset-project
+npm install
+npx expo run:android
 ```
+Grant **Usage Access** and **Display over other apps** when prompted (Settings → Permissions shows what each one is for).
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Status
+Work in progress. The blocking engine, task-gated unlock and stats are written; remaining work is on-device testing across manufacturers and the Play Store release steps. See [`ROADMAP.md`](ROADMAP.md) and [`docs/RELEASE.md`](docs/RELEASE.md).
